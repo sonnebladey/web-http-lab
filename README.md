@@ -19,15 +19,55 @@ the Innowise Python Trainee Program.
 1. Create a virtual environment.
 2. Activate the environment.
 3. Install dependencies:
-
+   python3 -m venv .venv
+   source .venv/bin/activate
+   python3 -m pip install -r requirements.txt
    pip install -r requirements.txt
 
 ## Run
 
     uvicorn main:app --reload
+    python3 -m uvicorn main:app --reload
 
 Open http://127.0.0.1:8000/docs
 
 ## Tests
 
     python -m pytest -v
+
+## API Endpoints
+
+Method Path Description
+GET /health Health check
+GET /hello Greeting message
+GET /notes List all notes
+POST /notes Create a note (201)
+GET /notes/{note_id} Get a note by ID (404 if missing)
+
+## API documentation
+
+http://127.0.0.1:8000/docs
+
+## REquest/Responce example
+
+POST/notes
+Request
+{
+"title": "Shopping",
+"content": "Buy milk"
+}
+
+Responce - HTTP 201
+{
+"id": 1,
+"title": "Shopping",
+"content": "Buy milk"
+}
+
+## Limitations
+
+Добавь предложение:
+
+Notes are stored in memory, so all data is lost when the application restarts.
+
+Сохрани README через ⌘ + S.

@@ -13,3 +13,15 @@ def test_hello():
 def test_missing():
     responce = client.get("/missing")
     assert responce.status_code == 404
+    
+def test_get_note_id():
+    responce = client.post("/notes", json={
+        "title":"Test", 
+        "content":"My first note"
+    })
+    note_id = responce.json()["id"]
+    get_responce = client.get(f"/notes/{note_id}")
+    
+    assert get_responce.status_code == 200
+    assert get_responce.json()["id"] == note_id
+    
