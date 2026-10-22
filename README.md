@@ -9,6 +9,10 @@ the Innowise Python Trainee Program.
 - GET /hello - returns a greeting message
 - Automatic API documentation with Swagger UI
 - Automated endpoint tests using TestClient
+- GET /notes - returns all notes
+- POST /notes - creates a new note (201 Created)
+- Pydantic validation for title and content
+- In-memory storage with auto-incrementing IDs
 
 ## Installation
 
