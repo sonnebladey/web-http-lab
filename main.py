@@ -1,6 +1,8 @@
 from fastapi import FastAPI 
 from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
+
 app = FastAPI(title = "Notes API", version = "0.1.0")
 
 @app.get("/health")
@@ -8,6 +10,13 @@ def health():
     return {
         "status":"ok"
     }
+
+
+@app.head("/health")
+def head_health():
+    return Response(status_code=200)
+
+
 @app.get("/hello")
 def hello():
     return{
@@ -43,4 +52,33 @@ def get_note(note_id:int):
         if note["id"] == note_id:
             return note
     raise HTTPException(status_code=404, detail = "Note not found")
-        
+
+
+class NoteUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=80)
+    content: str | None = Field(default=None, min_length=1, max_length=500)
+
+
+@app.patch("/notes/{note_id}")
+def update_note(note_id: int, update: NoteUpdate):
+    for note in notes:
+        if note["id"] == note_id:
+            if update.title is not None:
+                note["title"] = update.title
+
+            if update.content is not None:
+                note["content"] = update.content
+
+            return note
+
+    raise HTTPException(status_code=404, detail="Note not found")
+
+
+@app.delete("/notes/{note_id}", status_code=204)
+def delete_note(note_id: int):
+    for index, note in enumerate(notes):
+        if note["id"] == note_id:
+            notes.pop(index)
+            return Response(status_code=204)
+
+    raise HTTPException(status_code=404, detail="Note not found")
