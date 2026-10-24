@@ -28,16 +28,26 @@ def hello():
 class NoteCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=80)
     content: str = Field(..., min_length=1, max_length=500)
+    user_id: int = Field(..., ge=1) #ge means >= 
 
 notes = []
 next_id = 1
 
 @app.get("/notes")
-def get_notes():
+def get_notes(user_id: int | None = None):
     with get_connection() as conn:
         with conn.cursor(row_factory=dict_row) as cursor: #connection to db
-            cursor.execute("SELECT id, title, content FROM notes") # creating an objevct to run sql
-            return cursor.fetchall() #receives all found rows 
+            if user_id is not None: 
+                cursor.execute(
+                    "SELECT id, title, content, user_id FROM notes WHERE user_id = %s", 
+                    (user_id,)
+                )
+            else: 
+                cursor.execute(
+                    "SELECT id, title, content, user_id FROM notes"
+                )
+            return cursor.fetchall()
+          
 
 
 @app.post("/notes", status_code=201)
@@ -46,13 +56,14 @@ def create_note(note: NoteCreate):
         with conn.cursor(row_factory=dict_row) as cursor:
             cursor.execute(  # %splaceholder for values which are held separately
                 """
-                INSERT INTO notes (title, content)
-                VALUES (%s, %s) 
-                RETURNING id, title, content
+                INSERT INTO notes (title, content, user_id)
+                VALUES (%s, %s, %s) 
+                RETURNING id, title, content, user_id
                 """,
                 (
                     note.title,
                     note.content,
+                    note.user_id
                 ),  # parameterized query safety from sql injection
             )
             return cursor.fetchone() #receives one line of result 
@@ -63,7 +74,7 @@ def get_note(note_id:int):
     with get_connection() as conn:
         with conn.cursor(row_factory=dict_row) as cursor: # where id looks for concrete id 
             cursor.execute(
-                "select id, title, content FROM notes WHERE id = %s", 
+                "select id, title, content, user_id FROM notes WHERE id = %s", 
                 (note_id,)
             )
             #note_id id as a sql variable, we nedd ',' so pyhton could recognise the set with one value 

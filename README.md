@@ -120,3 +120,18 @@ API documentation: http://127.0.0.1:8000/docs
 - GET /notes/{note_id}
 
 Notes are stored in PostgreSQL and remain available after restarting the application.
+
+## Optional: Notes by User
+
+Each note has a user_id.
+
+POST /notes accepts title, content and user_id.
+
+GET /notes?user_id=1 returns notes belonging to user 1.
+
+GET /notes without user_id returns all notes.
+
+The add_user_id.sql file updates an existing database.
+For a new database, schema.sql already includes user_id.
+
+This is a simple user filter, not real authentication.

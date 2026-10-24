@@ -17,8 +17,10 @@ def test_missing():
 def test_get_note_id():
     responce = client.post("/notes", json={
         "title":"Test", 
-        "content":"My first note"
+        "content":"My first note",
+        "user_id": 1
     })
+    assert responce.status_code == 201
     note_id = responce.json()["id"]
     get_responce = client.get(f"/notes/{note_id}")
 
