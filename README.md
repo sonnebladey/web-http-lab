@@ -71,3 +71,52 @@ Responce - HTTP 201
 Notes are stored in memory, so all data is lost when the application restarts.
 
 Сохрани README через ⌘ + S.
+
+## PostgreSQL Setup
+
+This project uses PostgreSQL to store notes permanently.
+
+### 1. Install dependencies
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 2. Start PostgreSQL
+
+```bash
+brew services start postgresql@17
+```
+
+### 3. Create database and tables
+
+```bash
+/opt/homebrew/opt/postgresql@17/bin/createdb notes_db
+/opt/homebrew/opt/postgresql@17/bin/psql -d notes_db -f schema.sql
+```
+
+### 4. Configure environment
+
+Create a `.env` file:
+
+```env
+DATABASE_URL=postgresql:///notes_db
+```
+
+### 5. Run API
+
+```bash
+python3 -m uvicorn main:app --reload
+```
+
+API documentation: http://127.0.0.1:8000/docs
+
+### Endpoints using PostgreSQL
+
+- GET /notes
+- POST /notes
+- GET /notes/{note_id}
+
+Notes are stored in PostgreSQL and remain available after restarting the application.

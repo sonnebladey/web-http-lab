@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException
 from fastapi import FastAPI, HTTPException, Response
+from database import get_connection 
+from psycopg.rows import dict_row
 
 app = FastAPI(title = "Notes API", version = "0.1.0")
 
@@ -32,26 +34,48 @@ next_id = 1
 
 @app.get("/notes")
 def get_notes():
-    return notes 
+    with get_connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cursor: #connection to db
+            cursor.execute("SELECT id, title, content FROM notes") # creating an objevct to run sql
+            return cursor.fetchall() #receives all found rows 
+
 
 @app.post("/notes", status_code=201)
 def create_note(note: NoteCreate):
-    global next_id
-    new_note = {
-        "id":next_id,
-        "title": note.title, 
-        "content":note.content
-    }
-    notes.append(new_note)
-    next_id += 1 
-    return new_note
+    with get_connection() as conn: #automatic commit rollback 
+        with conn.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(  # %splaceholder for values which are held separately
+                """
+                INSERT INTO notes (title, content)
+                VALUES (%s, %s) 
+                RETURNING id, title, content
+                """,
+                (
+                    note.title,
+                    note.content,
+                ),  # parameterized query safety from sql injection
+            )
+            return cursor.fetchone() #receives one line of result 
+
 
 @app.get("/notes/{note_id}")
 def get_note(note_id:int):
-    for note in notes:
-        if note["id"] == note_id:
+    with get_connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cursor: # where id looks for concrete id 
+            cursor.execute(
+                "select id, title, content FROM notes WHERE id = %s", 
+                (note_id,)
+            )
+            #note_id id as a sql variable, we nedd ',' so pyhton could recognise the set with one value 
+            note = cursor.fetchone() # one line or none 
+            
+            if note is None:
+                raise HTTPException(
+                    status_code = 404, 
+                    detail = "Note not found"
+                )
             return note
-    raise HTTPException(status_code=404, detail = "Note not found")
+
 
 
 class NoteUpdate(BaseModel):
